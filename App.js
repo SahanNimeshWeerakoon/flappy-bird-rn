@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { Dimensions, StyleSheet, Text, View, TouchableWithoutFeedback } from 'react-native';
+import { Dimensions, StyleSheet, Text, View, TouchableWithoutFeedback, Animated } from 'react-native';
 import Bird from './components/Bird';
 import Obstacles from './components/Obstacles';
 
@@ -14,6 +14,7 @@ export default function App() {
 
   const { width, height } = Dimensions.get('screen');
   const [ birdBottom, setBirdBottom ] = useState(height/2);
+  const birdBottomTest = useState(new Animated.Value(height/2))[0];
   const [ obstaclesLeft, setObstaclesLeft ] = useState(width);
   const [ obstaclesLeftTwo, setObstaclesLeftTwo ] = useState(width + width/2 + obstacleWidth/2);
   const [ obstaclesNegHeight, setObstaclesNegHeight ] = useState(0);
@@ -29,18 +30,31 @@ export default function App() {
 
   const [ isGameOver, setIsGameOver ] = useState(false);
 
-  // make bird fall
   useEffect(() => {
-    if(birdBottom > 0) {
-      birdTimerId = setInterval(() => {
-        setBirdBottom(birdBottom => birdBottom - gravity);
-      }, 30);
+    fallBird();
+  }, []);
 
-      return () => {
-        clearInterval(birdTimerId);
-      }
-    }
-  }, [birdBottom]);
+  const fallBird = () => {
+    Animated.timing(birdBottomTest, {
+      toValue: 0,
+      duration: 3000,
+      useNativeDriver: false
+    }).start();
+  }
+
+  // make bird fall
+  // useEffect(() => {
+
+  //   if(birdBottom > 0) {
+  //     birdTimerId = setInterval(() => {
+  //       setBirdBottom(birdBottom => birdBottom - gravity);
+  //     }, 30);
+
+  //     return () => {
+  //       clearInterval(birdTimerId);
+  //     }
+  //   }
+  // }, [birdBottom]);
 
   // start first obstacles
   useEffect(() => {
@@ -83,7 +97,6 @@ export default function App() {
       ( (birdWidth/2+birdLeft) > obstaclesLeftTwo && (birdWidth/2+birdLeft) < obstaclesLeftTwo+obstacleWidth ) && ( (birdHeight/2+birdBottom) < obstaclesNegHeightTwo+obstacleHeight || (birdHeight/2+birdBottom) > obstaclesNegHeightTwo+obstacleHeight+gap )
     ) {
       gameOver();
-      console.log(score);
     }
   });
 
@@ -97,6 +110,8 @@ export default function App() {
   // make bird jump
   const jump = () => {
     if( !isGameOver && (birdBottom < height) ) {
+      birdBottomTest.setValue(birdBottomTest._value + 50);
+      fallBird();
       setBirdBottom(birdBottom => birdBottom + 50);
     }
   }
@@ -104,7 +119,7 @@ export default function App() {
   return (
     <TouchableWithoutFeedback onPress={jump}>
       <View style={styles.container}>
-        <Bird birdBottom={birdBottom} birdLeft={birdLeft} birdWidth={birdWidth} birdHeight={birdHeight} />
+        <Bird birdBottom={birdBottomTest} birdLeft={birdLeft} birdWidth={birdWidth} birdHeight={birdHeight} />
         <Obstacles
           obstacleWidth={obstacleWidth}
           obstacleHeight={obstacleHeight}
